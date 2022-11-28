@@ -4,12 +4,16 @@
 # License: MIT License
 # Description:  Calling './vote.sh' will query the configured RPC server for open votes and interactively walk you through the voting process.
 
-cosmos_exec=kujirad
-rpc_node='https://rpc.kaiyo.kujira.setten.io:443'
-wallet=<wallet_name>
-chain=kaiyo-1
-fees=250ukuji
-voter=kujira...
+cosmos_exec=${CHAIN_DAEMON:-kujirad}
+rpc_node=${RPC:-'https://rpc.kaiyo.kujira.setten.io:443'}
+wallet=${VOTE_WALLET}
+if [[ -z "${wallet}" ]]
+then
+  read -p "Enter wallet name: " wallet
+fi
+chain=${CHAIN_ID:-kaiyo-1}
+fees=${VOTE_FEES:-250ukuji}
+voter=${VOTE_ADDR:-$(${cosmos_exec} keys show -a ${wallet})}
 
 crad="${cosmos_exec} --node ${rpc_node}"
 
@@ -51,6 +55,11 @@ do
   echo " "
 done
 
+if [[ -z "$props_to_vote_on" ]]
+then
+  echo "$wallet has voted on all active proposals! 🎉"
+  exit 0
+fi
 echo "You need to vote on: $props_to_vote_on"
 echo " "
 read -p "Begin voting? [Y/n]" -n 1 -r
