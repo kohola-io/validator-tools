@@ -55,6 +55,11 @@ do
   echo " "
 done
 
+if [[ -z "$props_to_vote_on" ]]
+then
+  echo "$wallet has voted on all active proposals! 🎉"
+  exit 0
+fi
 echo "You need to vote on: $props_to_vote_on"
 echo " "
 read -p "Begin voting? [Y/n]" -n 1 -r
