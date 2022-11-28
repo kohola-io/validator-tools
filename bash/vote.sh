@@ -12,7 +12,7 @@ then
   read -p "Enter wallet name: " wallet
 fi
 chain=${CHAIN_ID:-kaiyo-1}
-fees=250ukuji
+fees=${VOTE_FEES:-250ukuji}
 voter=${VOTE_ADDR:-$(${cosmos_exec} keys show -a ${wallet})}
 
 crad="${cosmos_exec} --node ${rpc_node}"
