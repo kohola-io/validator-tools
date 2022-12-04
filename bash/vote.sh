@@ -48,7 +48,7 @@ do
   echo "Description: ${prop_desc}"
 
   prop_myvote=$($crad query gov vote $prop_num $voter 2>/dev/null )
-  [ $? -ne 0 ] && { prop_myvote="Not available!"; props_to_vote_on=($prop_num ${props_to_vote_on[@]}); } || \
+  [ $? -ne 0 ] && { prop_myvote="Not available!"; props_to_vote_on+=($prop_num); } || \
   prop_myvote=$(echo $prop_myvote | awk '{ sub(/option: /,"");sub(/options: .*/,"");print}')
   echo "My Vote: ${prop_myvote}"
   echo "*____________________________*"
@@ -60,7 +60,7 @@ then
   echo "$wallet has voted on all active proposals! 🎉"
   exit 0
 fi
-echo "You need to vote on: $props_to_vote_on"
+echo "You need to vote on: ${props_to_vote_on[@]}"
 echo " "
 read -p "Begin voting? [Y/n]" -n 1 -r
 REPLY=${REPLY:-Y}
@@ -71,7 +71,7 @@ fi
 echo " "
 echo " *** "
 echo " "
-for X in $props_to_vote_on;
+for X in ${props_to_vote_on[@]};
 do
   prop_info=$($crad query gov proposal $X)
 
