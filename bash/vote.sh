@@ -4,6 +4,7 @@
 # License: MIT License
 # Description:  Calling './vote.sh' will query the configured RPC server for open votes and interactively walk you through the voting process.
 
+set -e
 cosmos_exec=${CHAIN_DAEMON:-kujirad}
 rpc_node=${RPC:-'https://rpc.kaiyo.kujira.setten.io:443'}
 wallet=${VOTE_WALLET}
@@ -47,8 +48,8 @@ do
   prop_desc=$(echo $prop_info | awk '{ sub(/.*description: /,"");sub(/msg: .*/,"");print}')
   echo "Description: ${prop_desc}"
 
-  prop_myvote=$($crad query gov vote $prop_num $voter 2>/dev/null )
-  [ $? -ne 0 ] && { prop_myvote="Not available!"; props_to_vote_on+=($prop_num); } || \
+  prop_myvote=$($crad query gov vote $prop_num $voter 2>/dev/null) || true
+  [ -z "$prop_myvote" ] && { prop_myvote="Not available!"; props_to_vote_on+=($prop_num); } || \
   prop_myvote=$(echo $prop_myvote | awk '{ sub(/option: /,"");sub(/options: .*/,"");print}')
   echo "My Vote: ${prop_myvote}"
   echo "*____________________________*"
