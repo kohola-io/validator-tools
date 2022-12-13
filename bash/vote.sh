@@ -15,14 +15,13 @@ fi
 chain=${CHAIN_ID:-kaiyo-1}
 fees=${VOTE_FEES:-250ukuji}
 voter=${VOTE_ADDR:-$(${cosmos_exec} keys show -a ${wallet})}
+status_filter=${PROPOSAL_STATUS:-VotingPeriod}
 
 crad="${cosmos_exec} --node ${rpc_node}"
 
-search_status=PROPOSAL_STATUS_VOTING_PERIOD
-
 props_to_vote_on=()
 
-props=$($crad query gov proposals | grep -B 1 $search_status | grep proposal_id | grep -o [[:digit:]]*)
+props=$($crad query gov proposals --status "$status_filter" | grep proposal_id | grep -o [[:digit:]]*)
 [ $? -ne 0 ] && echo "No props need to be voted on!"
 echo "Finding active proposals..."
 echo "*____________________________*"
