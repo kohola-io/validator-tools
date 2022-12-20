@@ -4,7 +4,7 @@
 # License: MIT License
 # Description:  This script assumes you have a pricefeeder.service - it queries the LCD 
 # to determine if miss count is increasing over a 5 minute period.  If miss count has 
-# increased, this script will trigger a restart of the pricefeeder service.
+# increased 3 out of 5 times, this script will trigger a restart of the pricefeeder service.
 # 
 # Suggest adding the following to crontab - the RANDOM sleep is important to prevent 
 # restarts from occurring across all validators simultaneously:
