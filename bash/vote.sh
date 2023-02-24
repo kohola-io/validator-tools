@@ -21,7 +21,7 @@ crad="${cosmos_exec} --node ${rpc_node}"
 
 props_to_vote_on=()
 
-props=$($crad query gov proposals --status "$status_filter" | grep proposal_id | grep -o [[:digit:]]*)
+props=$($crad query gov proposals --status "$status_filter" | grep "\bid\b" | grep -o [[:digit:]]*)
 [ $? -ne 0 ] && echo "No props need to be voted on!"
 echo "Finding active proposals..."
 echo "*____________________________*"
