@@ -21,7 +21,7 @@ crad="${cosmos_exec} --node ${rpc_node}"
 
 props_to_vote_on=()
 
-props=$($crad query gov proposals --status "$status_filter" | grep proposal_id | grep -o [[:digit:]]*)
+props=$($crad query gov proposals --status "$status_filter" --output json | jq -r '.proposals[] | with_entries( select(.key|contains("id"))) | to_entries | .[] | .value')
 [ $? -ne 0 ] && echo "No props need to be voted on!"
 echo "Finding active proposals..."
 echo "*____________________________*"
@@ -47,9 +47,9 @@ do
   prop_desc=$(echo $prop_info | awk '{ sub(/.*description: /,"");sub(/msg: .*/,"");print}')
   echo "Description: ${prop_desc}"
 
-  prop_myvote=$($crad query gov vote $prop_num $voter 2>/dev/null) || true
+  prop_myvote=$($crad query gov vote $prop_num $voter --output json 2>/dev/null) || true
   [ -z "$prop_myvote" ] && { prop_myvote="Not available!"; props_to_vote_on+=($prop_num); } || \
-  prop_myvote=$(echo $prop_myvote | awk '{ sub(/option: /,"");sub(/options: .*/,"");print}')
+  prop_myvote=$(echo $prop_myvote | jq -r '.options[].option')
   echo "My Vote: ${prop_myvote}"
   echo "*____________________________*"
   echo " "
