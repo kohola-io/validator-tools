@@ -1,12 +1,12 @@
 #!/bin/bash
 # Author: Kohola.io
-# Date: 11/25/2022
+# Date: 4/12/2023
 # License: MIT License
 # Description:  Calling './vote.sh' will query the configured RPC server for open votes and interactively walk you through the voting process.
 
 set -e
 cosmos_exec=${CHAIN_DAEMON:-kujirad}
-rpc_node=${RPC:-'https://rpc.kaiyo.kujira.setten.io:443'}
+rpc_node=${RPC:-'https://rpc-kujira.mintthemoon.xyz:443'}
 wallet=${VOTE_WALLET}
 if [[ -z "${wallet}" ]]
 then
@@ -21,7 +21,7 @@ crad="${cosmos_exec} --node ${rpc_node}"
 
 props_to_vote_on=()
 
-props=$($crad query gov proposals --status "$status_filter" | grep proposal_id | grep -o [[:digit:]]*)
+props=$($crad query gov proposals --status "$status_filter" | grep "  id:" | grep -o [[:digit:]]*)
 [ $? -ne 0 ] && echo "No props need to be voted on!"
 echo "Finding active proposals..."
 echo "*____________________________*"
@@ -49,7 +49,7 @@ do
 
   prop_myvote=$($crad query gov vote $prop_num $voter 2>/dev/null) || true
   [ -z "$prop_myvote" ] && { prop_myvote="Not available!"; props_to_vote_on+=($prop_num); } || \
-  prop_myvote=$(echo $prop_myvote | awk '{ sub(/option: /,"");sub(/options: .*/,"");print}')
+  prop_myvote=$(echo $prop_myvote | awk ' { sub(/metadata:.*- option: /,"");sub(/ weight.*/,"");print}')
   echo "My Vote: ${prop_myvote}"
   echo "*____________________________*"
   echo " "
