@@ -1,6 +1,6 @@
 #!/bin/bash
 # Author: Kohola.io
-# Date: 4/12/2023
+# Date: 10/11/2023
 # License: MIT License
 # Description:  Calling './vote.sh' will query the configured RPC server for open votes and interactively walk you through the voting process.
 
@@ -15,7 +15,7 @@ fi
 chain=${CHAIN_ID:-kaiyo-1}
 fees=${VOTE_FEES:-250ukuji}
 voter=${VOTE_ADDR:-$(${cosmos_exec} keys show -a ${wallet})}
-status_filter=${PROPOSAL_STATUS:-VotingPeriod}
+status_filter=${PROPOSAL_STATUS:-PROPOSAL_STATUS_VOTING_PERIOD}
 
 crad="${cosmos_exec} --node ${rpc_node}"
 
