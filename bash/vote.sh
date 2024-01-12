@@ -1,6 +1,6 @@
 #!/bin/bash
 # Author: Kohola.io
-# Date: 10/11/2023
+# Date: 1/12/2024
 # License: MIT License
 # Description:  Calling './vote.sh' will query the configured RPC server for open votes and interactively walk you through the voting process.
 
@@ -44,8 +44,15 @@ do
   { (( res=(prop_end+(60*60*24))/(60*60*24) )); prop_time_f="${res} days"; }
   echo "Time Left: ${prop_time_f}"
 
-  prop_desc=$(echo $prop_info | awk '{ sub(/.*description: /,"");sub(/msg: .*/,"");print}')
-  echo "Description: ${prop_desc}"
+  prop_title=$(echo $prop_info | awk '{ sub(/.*title: /,"");sub(/total_deposit: .*/,"");print}')
+  echo "Title: ${prop_title}"
+
+  prop_desc=$(echo $prop_info | awk '{ sub(/.*summary: /,"");sub(/title: .*/,"");print}')
+  echo "Summary: ${prop_desc}"
+
+  prop_msgs=$(echo $prop_info | awk '{ sub(/.*messages: /,"");sub(/status: .*/,"");print}')
+  echo "Messages:"
+  echo "${prop_msgs@E}"
 
   prop_myvote=$($crad query gov vote $prop_num $voter 2>/dev/null) || true
   [ -z "$prop_myvote" ] && { prop_myvote="Not available!"; props_to_vote_on+=($prop_num); } || \
