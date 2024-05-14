@@ -1,6 +1,6 @@
 #!/bin/bash
 # Author: Kohola.io
-# Date: 1/12/2024
+# Date: 5/14/2024
 # License: MIT License
 # Description:  Calling './vote.sh' will query the configured RPC server for open votes and interactively walk you through the voting process.
 
@@ -13,28 +13,27 @@ then
   read -p "Enter wallet name: " wallet
 fi
 chain=${CHAIN_ID:-kaiyo-1}
-fees=${VOTE_FEES:-250ukuji}
+fees=${VOTE_FEES:-340ukuji}
 voter=${VOTE_ADDR:-$(${cosmos_exec} keys show -a ${wallet})}
-status_filter=${PROPOSAL_STATUS:-PROPOSAL_STATUS_VOTING_PERIOD}
+status_filter=${PROPOSAL_STATUS:-voting_period}
 
 crad="${cosmos_exec} --node ${rpc_node}"
 
 props_to_vote_on=()
 
-props=$($crad query gov proposals --status "$status_filter" | grep "  id:" | grep -o [[:digit:]]*)
+props=$($crad query gov proposals --status "$status_filter" -o json | jq -r '.proposals[].id')
 [ $? -ne 0 ] && echo "No props need to be voted on!"
 echo "Finding active proposals..."
 echo "*____________________________*"
 echo " "
 for X in $props;
 do
-  prop_info=$($crad query gov proposal $X)
+  prop_info=$($crad query gov proposal $X -o json)
 
   prop_num=$X
   echo "Proposal ID: ${prop_num}"
 
-  prop_end=$(echo $prop_info | awk '{ sub(/.*voting_end_time: /,"");sub(/ voting_start_time: .*/,"");print}')
-  prop_end=$(echo $prop_end | tr -d \")
+  prop_end=$(echo $prop_info | jq -r '.voting_end_time')
   time_now=$(date +%s)
   prop_end=$(date --date $prop_end +%s)
   (( prop_end=prop_end-time_now ))
@@ -44,19 +43,19 @@ do
   { (( res=(prop_end+(60*60*24))/(60*60*24) )); prop_time_f="${res} days"; }
   echo "Time Left: ${prop_time_f}"
 
-  prop_title=$(echo $prop_info | awk '{ sub(/.*title: /,"");sub(/total_deposit: .*/,"");print}')
+  prop_title=$(echo $prop_info | jq -r '.title')
   echo "Title: ${prop_title}"
 
-  prop_desc=$(echo $prop_info | awk '{ sub(/.*summary: /,"");sub(/title: .*/,"");print}')
+  prop_desc=$(echo $prop_info | jq -r '.summary')
   echo "Summary: ${prop_desc}"
 
-  prop_msgs=$(echo $prop_info | awk '{ sub(/.*messages: /,"");sub(/status: .*/,"");print}')
+  prop_msgs=$(echo $prop_info | jq '.messages[] | del(.wasm_byte_code)')
   echo "Messages:"
-  echo "${prop_msgs@E}"
+  echo $prop_msgs | jq
 
-  prop_myvote=$($crad query gov vote $prop_num $voter 2>/dev/null) || true
+  prop_myvote=$($crad query gov vote $prop_num $voter -o json 2>/dev/null) || true
   [ -z "$prop_myvote" ] && { prop_myvote="Not available!"; props_to_vote_on+=($prop_num); } || \
-  prop_myvote=$(echo $prop_myvote | awk ' { sub(/metadata:.*- option: /,"");sub(/ weight.*/,"");print}')
+  prop_myvote=$(echo $prop_myvote | jq -r '.options[0].option')
   echo "My Vote: ${prop_myvote}"
   echo "*____________________________*"
   echo " "
@@ -80,13 +79,20 @@ echo " *** "
 echo " "
 for X in ${props_to_vote_on[@]};
 do
-  prop_info=$($crad query gov proposal $X)
+  prop_info=$($crad query gov proposal $X -o json)
 
   prop_num=$X
   echo "Voting on Proposal ID: ${prop_num}"
 
-  prop_desc=$(echo $prop_info | awk '{ sub(/.*description: /,"");sub(/msg: .*/,"");print}')
-  echo "Description: ${prop_desc}"
+  prop_title=$(echo $prop_info | jq -r '.title')
+  echo "Title: ${prop_title}"
+
+  prop_desc=$(echo $prop_info | jq -r '.summary')
+  echo "Summary: ${prop_desc}"
+
+  prop_msgs=$(echo $prop_info | jq '.messages[] | del(.wasm_byte_code)')
+  echo "Messages:"
+  echo $prop_msgs | jq
 
   stuck=1
   valid_words="yes no nowithveto abstain"
